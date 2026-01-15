@@ -1,9 +1,12 @@
 
 import React, { useState } from 'react';
-import { HomeView } from './views/HomeView';
-import { ProposalView } from './views/ProposalView';
-import { LandingView } from './views/LandingView';
-import { StrategyView } from './views/StrategyView';
+// QUITAR LLAVES A LAS VISTAS
+import HomeView from './views/HomeView';
+import ProposalView from './views/ProposalView';
+import LandingView from './views/LandingView';
+import StrategyView from './views/StrategyView';
+
+// MANTENER LLAVES EN COMPONENTES Y TIPOS (Si así están exportados)
 import { Navbar } from './components/Navbar';
 import { AIChatbot } from './components/AIChatbot';
 import { PageView, Language } from './types';
