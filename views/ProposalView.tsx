@@ -78,3 +78,4 @@ export const ProposalView: React.FC = () => {
     </div>
   );
 };
+export default ProposalView;
