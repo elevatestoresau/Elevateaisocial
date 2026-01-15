@@ -168,3 +168,4 @@ export const HomeView: React.FC<HomeViewProps> = ({ lang }) => {
     </div>
   );
 };
+export default HomeView;
