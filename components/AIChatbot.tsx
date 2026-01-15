@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import { MessageSquare, Send, X, Bot, Loader2 } from 'lucide-react';
 import { Language } from '../types';
 
