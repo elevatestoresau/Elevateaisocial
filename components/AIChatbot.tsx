@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { MessageSquare, Send, X, Bot, Loader2 } from 'lucide-react';
@@ -36,11 +35,8 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     setInput('');
     setIsLoading(true);
 
-   try {
-      // 1. Corregido el nombre de la clase y la forma de pasar la API Key
+    try {
       const genAI = new GoogleGenerativeAI(process.env.API_KEY || '');
-      
-      // 2. Definimos el modelo (usando gemini-1.5-flash que es el estándar actual)
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
@@ -57,7 +53,6 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
           Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com. Mention we are global and build high-performing websites.`,
       });
 
-     // 3. Generamos el contenido
       const result = await model.generateContent(userMsg);
       const response = await result.response;
       const botText = response.text();
@@ -66,15 +61,6 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     } catch (error) {
       console.error("Error con Gemini:", error);
       setMessages(prev => [...prev, {role: 'bot', text: lang === 'en' ? "G'day, connection seems a bit dodgy. Try again in a sec!" : "¡Hola! Parece que hay un problema de conexión. ¡Inténtalo de nuevo en un momento!"}]);
-    } finally {
-      setIsLoading(false);
-    }
-
-      const botText = response.text || (lang === 'en' ? "I'm having a technical glitch, mate. Can you repeat that?" : "Estoy teniendo un fallo técnico. ¿Podrías repetirlo?");
-      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
-    } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, {role: 'bot', text: "G'day, connection seems a bit dodgy. Try again in a sec!"}]);
     } finally {
       setIsLoading(false);
     }
