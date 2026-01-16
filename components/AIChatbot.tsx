@@ -35,38 +35,46 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     setInput('');
     setIsLoading(true);
 
-  try {
-      // Usamos la variable de entorno que ya configuraste en Vercel
+    try {
+      // 1. Obtener la clave de las variables de entorno de Vite/Vercel
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       
       if (!apiKey) {
-        throw new Error("API Key no configurada en Vercel");
-    }
+        throw new Error("API Key no detectada. Verifica las variables en Vercel.");
+      }
 
+      // 2. Inicializar la IA con la versión v1beta explícita
       const genAI = new GoogleGenerativeAI(apiKey);
+      
+      // Forzamos v1beta para evitar el error 404
+      const model = genAI.getGenerativeModel(
+        { 
+          model: "gemini-1.5-flash",
+          systemInstruction: `You are the official assistant of Elevate AI Social, operating in Australia and Spain. 
+          Email: elevate.storesau@gmail.com. Reply in ${lang === 'en' ? 'English' : 'Spanish'}. 
+          Tone: Professional and friendly. Services: AI Strategy, Automation, Web Dev, Consulting. 
+          Goal: Encourage Booking a Free Audit Call.` 
+        },
+        { apiVersion: 'v1beta' }
+      );
 
-      // 2. Configuramos el modelo con la versión v1beta para evitar el error 404
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
-          Email: elevate.storesau@gmail.com.
-          Current language of the user: ${lang}. 
-          Always reply in the language the user is using.
-          Tone: Expert, modern, professional, yet friendly. If responding in English to someone in AU, you can use "Mate" or "G'day". If responding in Spanish, be professional yet close.
-          Services: 1. AI Content Strategy, 2. Business Automation, 3. Web Development, 4. Strategic Consulting.
-          Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com.`,
-      }, { apiVersion: 'v1beta' });
-
-      // 3. Ejecutamos la generación de contenido (solo una vez)
       const result = await model.generateContent(userMsg);
       const response = await result.response;
       const botText = response.text();
 
       setMessages(prev => [...prev, {role: 'bot', text: botText}]);
       
-    } catch (error) {
-      console.error("Error detallado:", error);
-      setMessages(prev => [...prev, {role: 'bot', text: lang === 'en' ? "G'day, connection seems a bit dodgy. Try again!" : "¡Hola! Parece que hay un problema de conexión. ¡Inténtalo de nuevo!"}]);
+    } catch (error: any) {
+      console.error("Error detallado de Gemini:", error);
+      
+      // Mensaje de error amigable según el idioma
+      const errorMsg = lang === 'en' 
+        ? "G'day! Connection is a bit dodgy. Please try again in a moment." 
+        : "¡Hola! Parece que hay un problema de conexión. Por favor, inténtalo de nuevo en un momento.";
+      
+      setMessages(prev => [...prev, {role: 'bot', text: errorMsg}]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,11 +86,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><Bot size={24} /></div>
               <div className="flex flex-col">
-                <span className="font-black text-sm uppercase tracking-widest">Elevate AI</span>
-                <span className="text-[10px] opacity-70">Global Support</span>
+                <span className="font-black text-sm uppercase tracking-widest text-white">Elevate AI</span>
+                <span className="text-[10px] text-white/70">Global Support</span>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="hover:rotate-90 transition-transform"><X size={20} /></button>
+            <button onClick={() => setIsOpen(false)} className="text-white hover:rotate-90 transition-transform"><X size={20} /></button>
           </div>
           
           <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-6 bg-zinc-900/80 backdrop-blur-xl">
@@ -110,11 +118,12 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder={lang === 'en' ? "Ask anything..." : "Escribe algo..."}
-              className="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-all"
+              className="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500 transition-all"
             />
             <button 
               onClick={handleSend}
-              className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-700 hover:rotate-12 transition-all shadow-lg shadow-blue-500/20"
+              disabled={isLoading}
+              className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 hover:rotate-12 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
             >
               <Send size={20} />
             </button>
@@ -123,7 +132,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
       ) : (
         <button 
           onClick={() => setIsOpen(true)}
-          className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-[0_20px_40px_rgba(37,99,235,0.4)] hover:scale-110 hover:-rotate-6 transition-all group border border-blue-400/30"
+          className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-[0_20px_40px_rgba(37,99,235,0.4)] hover:scale-110 hover:-rotate-6 transition-all group border border-blue-400/30"
         >
           <MessageSquare size={30} className="group-hover:scale-110 transition-transform" />
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-black rounded-full animate-pulse"></div>
