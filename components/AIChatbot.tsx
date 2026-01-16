@@ -27,46 +27,47 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     }
   }, [messages]);
 
- const handleSend = async () => {
-  if (!input.trim() || isLoading) return;
+const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-  const userMsg = input.trim();
-  setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-  setInput('');
-  setIsLoading(true);
+    const userMsg = input.trim();
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setInput('');
+    setIsLoading(true);
 
-  try {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("API Key missing");
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API Key missing");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Forzamos v1beta explícitamente
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash" 
-    }, { apiVersion: 'v1beta' });
+      const genAI = new GoogleGenerativeAI(apiKey);
+      
+      // FORZAMOS v1beta explícitamente en el segundo parámetro
+      const model = genAI.getGenerativeModel(
+        { model: "gemini-1.5-flash" },
+        { apiVersion: 'v1beta' }
+      );
 
-    // Pasamos la instrucción del sistema aquí para máxima compatibilidad
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-      systemInstruction: {
-        parts: [{ text: `You are the official assistant of Elevate AI Social. Reply in ${lang === 'en' ? 'English' : 'Spanish'}.` }]
-      }
-    });
+      // Pasamos las instrucciones aquí para asegurar compatibilidad
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+        systemInstruction: {
+          parts: [{ text: `You are the official assistant of Elevate AI Social. Reply in ${lang === 'en' ? 'English' : 'Spanish'}.` }]
+        }
+      });
 
-    const response = await result.response;
-    setMessages(prev => [...prev, { role: 'bot', text: response.text() }]);
-    
-  } catch (error: any) {
-    console.error("Error:", error);
-    setMessages(prev => [...prev, { 
-      role: 'bot', 
-      text: lang === 'en' ? "Dodgy connection, mate. Try again!" : "Error de conexión, intenta de nuevo." 
-    }]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      const response = await result.response;
+      setMessages(prev => [...prev, { role: 'bot', text: response.text() }]);
+      
+    } catch (error: any) {
+      console.error("Error detallado:", error);
+      setMessages(prev => [...prev, { 
+        role: 'bot', 
+        text: lang === 'en' ? "Dodgy connection, mate. Try again!" : "Error de conexión, intenta de nuevo." 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed bottom-8 right-8 z-[100]">
