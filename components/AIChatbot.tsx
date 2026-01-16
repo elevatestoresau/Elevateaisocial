@@ -35,8 +35,10 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     setInput('');
     setIsLoading(true);
 
-    try {
-     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+   try {
+      // Usamos la variable de Vite que ya configuraste en Vercel
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
@@ -51,7 +53,14 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
           4. 1:1 Strategic Consulting.
           Operating Markets: Australia and Spain.
           Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com. Mention we are global and build high-performing websites.`,
-      });
+      }, { apiVersion: 'v1beta' }); // <--- Esto es vital para evitar el error 404
+
+      const result = await model.generateContent(userMsg);
+      const response = await result.response;
+      const botText = response.text();
+
+      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
+    } catch (error) {
 
       const result = await model.generateContent(userMsg);
       const response = await result.response;
