@@ -36,7 +36,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     setIsLoading(true);
 
     try {
-      const genAI = new GoogleGenerativeAI(process.env.API_KEY || '');
+     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
