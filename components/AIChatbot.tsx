@@ -27,56 +27,46 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+ const handleSend = async () => {
+  if (!input.trim() || isLoading) return;
 
-    const userMsg = input.trim();
-    setMessages(prev => [...prev, {role: 'user', text: userMsg}]);
-    setInput('');
-    setIsLoading(true);
+  const userMsg = input.trim();
+  setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+  setInput('');
+  setIsLoading(true);
 
-    try {
-      // 1. Obtener la clave de las variables de entorno de Vite/Vercel
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error("API Key no detectada. Verifica las variables en Vercel.");
+  try {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) throw new Error("API Key missing");
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Forzamos v1beta explícitamente
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash" 
+    }, { apiVersion: 'v1beta' });
+
+    // Pasamos la instrucción del sistema aquí para máxima compatibilidad
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+      systemInstruction: {
+        parts: [{ text: `You are the official assistant of Elevate AI Social. Reply in ${lang === 'en' ? 'English' : 'Spanish'}.` }]
       }
+    });
 
-      // 2. Inicializar la IA con la versión v1beta explícita
-      const genAI = new GoogleGenerativeAI(apiKey);
-      
-      // Forzamos v1beta para evitar el error 404
-      const model = genAI.getGenerativeModel(
-        { 
-          model: "gemini-1.5-flash",
-          systemInstruction: `You are the official assistant of Elevate AI Social, operating in Australia and Spain. 
-          Email: elevate.storesau@gmail.com. Reply in ${lang === 'en' ? 'English' : 'Spanish'}. 
-          Tone: Professional and friendly. Services: AI Strategy, Automation, Web Dev, Consulting. 
-          Goal: Encourage Booking a Free Audit Call.` 
-        },
-        { apiVersion: 'v1beta' }
-      );
-
-      const result = await model.generateContent(userMsg);
-      const response = await result.response;
-      const botText = response.text();
-
-      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
-      
-    } catch (error: any) {
-      console.error("Error detallado de Gemini:", error);
-      
-      // Mensaje de error amigable según el idioma
-      const errorMsg = lang === 'en' 
-        ? "G'day! Connection is a bit dodgy. Please try again in a moment." 
-        : "¡Hola! Parece que hay un problema de conexión. Por favor, inténtalo de nuevo en un momento.";
-      
-      setMessages(prev => [...prev, {role: 'bot', text: errorMsg}]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const response = await result.response;
+    setMessages(prev => [...prev, { role: 'bot', text: response.text() }]);
+    
+  } catch (error: any) {
+    console.error("Error:", error);
+    setMessages(prev => [...prev, { 
+      role: 'bot', 
+      text: lang === 'en' ? "Dodgy connection, mate. Try again!" : "Error de conexión, intenta de nuevo." 
+    }]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="fixed bottom-8 right-8 z-[100]">
