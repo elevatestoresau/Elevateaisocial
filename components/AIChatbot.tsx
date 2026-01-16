@@ -41,11 +41,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
       
       if (!apiKey) {
         throw new Error("API Key no configurada en Vercel");
-      }
+    }
 
       const genAI = new GoogleGenerativeAI(apiKey);
 
-      // Agregamos { apiVersion: 'v1beta' } como SEGUNDO argumento
+      // 2. Configuramos el modelo con la versión v1beta para evitar el error 404
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
@@ -57,33 +57,16 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
           Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com.`,
       }, { apiVersion: 'v1beta' });
 
+      // 3. Ejecutamos la generación de contenido (solo una vez)
       const result = await model.generateContent(userMsg);
       const response = await result.response;
       const botText = response.text();
 
       setMessages(prev => [...prev, {role: 'bot', text: botText}]);
+      
     } catch (error) {
       console.error("Error detallado:", error);
-      setMessages(prev => [...prev, {role: 'bot', text: "Lo siento, hubo un error de conexión."}]);
-    }
-
-      const result = await model.generateContent(userMsg);
-      const response = await result.response;
-      const botText = response.text();
-
-      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
-    } catch (error) {
-
-      const result = await model.generateContent(userMsg);
-      const response = await result.response;
-      const botText = response.text();
-
-      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
-    } catch (error) {
-      console.error("Error con Gemini:", error);
-      setMessages(prev => [...prev, {role: 'bot', text: lang === 'en' ? "G'day, connection seems a bit dodgy. Try again in a sec!" : "¡Hola! Parece que hay un problema de conexión. ¡Inténtalo de nuevo en un momento!"}]);
-    } finally {
-      setIsLoading(false);
+      setMessages(prev => [...prev, {role: 'bot', text: lang === 'en' ? "G'day, connection seems a bit dodgy. Try again!" : "¡Hola! Parece que hay un problema de conexión. ¡Inténtalo de nuevo!"}]);
     }
   };
 
