@@ -35,10 +35,17 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
     setInput('');
     setIsLoading(true);
 
-   try {
-      // Usamos la variable de Vite que ya configuraste en Vercel
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+  try {
+      // Usamos la variable de entorno que ya configuraste en Vercel
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error("API Key no configurada en Vercel");
+      }
 
+      const genAI = new GoogleGenerativeAI(apiKey);
+
+      // Agregamos { apiVersion: 'v1beta' } como SEGUNDO argumento
       const model = genAI.getGenerativeModel({ 
         model: "gemini-1.5-flash",
         systemInstruction: `You are the official assistant of Elevate AI Social, an agency operating internationally in Gold Coast/Brisbane (Australia) and Spain.
@@ -46,14 +53,19 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ lang }) => {
           Current language of the user: ${lang}. 
           Always reply in the language the user is using.
           Tone: Expert, modern, professional, yet friendly. If responding in English to someone in AU, you can use "Mate" or "G'day". If responding in Spanish, be professional yet close.
-          Services: 
-          1. AI Content Strategy (Reels, Carousels).
-          2. Business Automation (Make/Zapier workflows).
-          3. High-Conversion Web Development & Design.
-          4. 1:1 Strategic Consulting.
-          Operating Markets: Australia and Spain.
-          Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com. Mention we are global and build high-performing websites.`,
-      }, { apiVersion: 'v1beta' }); // <--- Esto es vital para evitar el error 404
+          Services: 1. AI Content Strategy, 2. Business Automation, 3. Web Development, 4. Strategic Consulting.
+          Goal: Encourage them to book a "Free Audit Call" or email us at elevate.storesau@gmail.com.`,
+      }, { apiVersion: 'v1beta' });
+
+      const result = await model.generateContent(userMsg);
+      const response = await result.response;
+      const botText = response.text();
+
+      setMessages(prev => [...prev, {role: 'bot', text: botText}]);
+    } catch (error) {
+      console.error("Error detallado:", error);
+      setMessages(prev => [...prev, {role: 'bot', text: "Lo siento, hubo un error de conexión."}]);
+    }
 
       const result = await model.generateContent(userMsg);
       const response = await result.response;
